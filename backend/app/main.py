@@ -5,12 +5,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .config import UPLOADS_DIR, ALLOWED_ORIGINS
-from .database import engine, Base, SessionLocal
+from .database import engine, Base, SessionLocal, ensure_columns
 from .seed_data import seed_database
 from .routes import applications, documents, findings, rules, sources, alerts, audit
 
 # Initialize DB tables
 Base.metadata.create_all(bind=engine)
+ensure_columns()
 
 # Seed realistic database records on startup
 with SessionLocal() as db:

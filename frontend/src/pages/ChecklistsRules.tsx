@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sliders, Plus, Check, AlertTriangle, Shield, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Sliders, Plus, Check, AlertTriangle, Shield, ToggleLeft, ToggleRight, BookOpen, Layers } from 'lucide-react';
 import { fetchRules, toggleRule } from '../api/client';
 import { ValidationRule } from '../types';
 
@@ -41,17 +41,25 @@ export const ChecklistsRules: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Title & Handbook Badge */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#14323b] tracking-tight">Checklists & rules</h1>
-          <p className="text-xs sm:text-sm text-[#4b6a73] mt-0.5">
-            Configurable regulatory validation criteria based on the AICTE Approval Process Handbook.
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#EAF8FF] text-[#0369A1] border border-[#BFE9FF]">
+              Regulatory Engine
+            </span>
+            <span className="text-xs text-[#888A98]">· Configurable Rules</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#171827] tracking-tight">Checklists & Rules</h1>
+          <p className="text-xs sm:text-sm text-[#686B7A] mt-1">
+            Configurable regulatory validation criteria based on the AICTE Approval Process Handbook (APH).
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold px-3 py-1.5 bg-[#eaf4f7] text-[#1b4d57] border border-[#d0e2e9] rounded-lg">
-            Handbook Edition: AY 2026-27 (Demo)
+          <span className="text-xs font-bold px-3 py-1.5 bg-[#EAF8FF] text-[#0369A1] border border-[#BFE9FF] rounded-xl flex items-center gap-1.5 shadow-2xs">
+            <BookOpen className="w-3.5 h-3.5 text-[#6F3DFF]" />
+            <span>AICTE Handbook AY 2026-27</span>
           </span>
         </div>
       </div>
@@ -62,10 +70,10 @@ export const ChecklistsRules: React.FC = () => {
           <button
             key={cat}
             onClick={() => setCategoryFilter(cat)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all min-h-[38px] ${
               categoryFilter === cat
-                ? 'bg-[#255e69] text-white shadow-sm'
-                : 'bg-white text-[#395e67] border border-[#d6e3e7] hover:bg-gray-50'
+                ? 'bg-gradient-to-r from-[#4922C7] to-[#6F3DFF] text-white shadow-md shadow-[#6F3DFF]/30'
+                : 'bg-white text-[#484A54] border-2 border-[#CBD5E1] hover:border-[#6F3DFF] hover:bg-[#BFE9FF]/30'
             }`}
           >
             {cat}
@@ -78,48 +86,51 @@ export const ChecklistsRules: React.FC = () => {
         {filtered.map((rule) => (
           <div
             key={rule.id}
-            className={`bg-white p-5 rounded-xl border transition-all ${
-              rule.is_active ? 'border-[#e1eaed] shadow-sm' : 'border-gray-200 opacity-60 bg-gray-50'
+            className={`p-5 sm:p-6 rounded-2xl border-2 transition-all duration-150 ${
+              rule.is_active 
+                ? 'bg-white border-[#CBD5E1] hover:border-[#6F3DFF] shadow-sm hover:shadow-md' 
+                : 'bg-[#F8FAFC] border-[#E2E8F0] opacity-60'
             }`}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[11px] font-bold text-[#1b5361] px-2 py-0.5 bg-[#edf5f7] rounded border border-[#d5e5eb]">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono text-[11px] font-black text-[#1E0B54] px-2.5 py-0.5 bg-[#BFE9FF] rounded-lg border border-[#94D9FF] shadow-2xs">
                     {rule.code}
                   </span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                    rule.severity === 'High' ? 'bg-red-50 text-red-700' :
-                    rule.severity === 'Medium' ? 'bg-amber-50 text-amber-700' :
-                    'bg-blue-50 text-blue-700'
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
+                    rule.severity === 'High' ? 'bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]' :
+                    rule.severity === 'Medium' ? 'bg-[#FFFBEB] text-[#92400E] border border-[#FDE68A]' :
+                    'bg-[#EAF8FF] text-[#0369A1] border border-[#BAE6FD]'
                   }`}>
                     Severity: {rule.severity}
                   </span>
                 </div>
-                <h3 className="font-bold text-sm text-[#14323b] mt-2">{rule.name}</h3>
+                <h3 className="font-extrabold text-sm sm:text-base text-[#171827] mt-2.5 leading-snug">{rule.name}</h3>
               </div>
 
               {/* Toggle button */}
               <button
                 onClick={() => handleToggle(rule.id, rule.is_active)}
-                className="text-[#255e69] hover:text-[#1a444c] transition-colors p-1"
+                className="text-[#6F3DFF] hover:text-[#5A2CE3] transition-colors p-1 flex-shrink-0"
                 title={rule.is_active ? 'Disable rule' : 'Enable rule'}
+                aria-label={rule.is_active ? `Disable rule ${rule.name}` : `Enable rule ${rule.name}`}
               >
                 {rule.is_active ? (
-                  <ToggleRight className="w-7 h-7 text-[#255e69]" />
+                  <ToggleRight className="w-9 h-9 text-[#6F3DFF] stroke-[2.2]" />
                 ) : (
-                  <ToggleLeft className="w-7 h-7 text-gray-400" />
+                  <ToggleLeft className="w-9 h-9 text-[#B7B7B7] stroke-[2.2]" />
                 )}
               </button>
             </div>
 
-            <p className="text-xs text-[#4b6a73] leading-relaxed mt-2.5">
+            <p className="text-xs text-[#334155] leading-relaxed mt-2.5 font-medium">
               {rule.description}
             </p>
 
-            <div className="mt-4 pt-3 border-t border-[#edf3f5] flex items-center justify-between text-[11px] text-[#6b8991]">
-              <span>Required: <strong className="text-[#203a40]">{rule.required_evidence}</strong></span>
-              <span>Version: {rule.version}</span>
+            <div className="mt-4 pt-3 border-t-2 border-[#F1F5F9] flex flex-wrap items-center justify-between text-[11px] text-[#475569] gap-2">
+              <span>Required: <strong className="text-[#171827] font-bold">{rule.required_evidence}</strong></span>
+              <span className="font-mono text-[10.5px] font-bold bg-[#F1F5F9] px-2 py-0.5 rounded border border-[#CBD5E1]">v{rule.version}</span>
             </div>
           </div>
         ))}

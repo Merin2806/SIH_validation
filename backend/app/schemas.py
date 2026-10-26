@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional, Any, Dict
 from datetime import datetime
 
@@ -12,6 +12,8 @@ class ApplicationCreate(ApplicationBase):
     id: Optional[str] = None
 
 class ExtractedFieldOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     field_name: str
     field_value: str
@@ -22,17 +24,21 @@ class ExtractedFieldOut(BaseModel):
     validation_message: Optional[str] = None
     bounding_box: Optional[Dict[str, Any]] = None
 
-    class Config:
-        from_attributes = True
-
 class FindingOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     finding_number: int
+    rule_id: Optional[str] = None
+    category: Optional[str] = "Regulatory Compliance"
     title: str
     status: str
     severity: str
     why_flagged: str
+    expected_value: Optional[str] = None
+    actual_value: Optional[str] = None
     evidence_text: Optional[str] = None
+    page_number: Optional[int] = 1
     rule_name: str
     suggested_next_step: Optional[str] = None
     ai_generated: bool
@@ -43,12 +49,12 @@ class FindingOut(BaseModel):
     reviewer_note: Optional[str] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 class UploadedDocumentOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     filename: str
+    file_path: Optional[str] = None
     file_size_formatted: str
     mime_type: str
     sha256_hash: Optional[str]
@@ -56,14 +62,15 @@ class UploadedDocumentOut(BaseModel):
     detected_language: str
     processing_status: str
     is_duplicate: bool
+    ocr_used: Optional[bool] = False
+    ocr_status: Optional[str] = "not_required"
     page_count: int
     extracted_fields: List[ExtractedFieldOut] = []
     findings: List[FindingOut] = []
 
-    class Config:
-        from_attributes = True
-
 class ValidationCheckOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     checklist_item: str
     source_type: str
@@ -71,24 +78,29 @@ class ValidationCheckOut(BaseModel):
     details: Optional[str] = None
     order_index: int
 
-    class Config:
-        from_attributes = True
-
 class VerificationAttemptOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     source_name: str
+    document_id: Optional[str] = None
+    verification_method: Optional[str] = "Simulated Adapter"
+    reference_checked: Optional[str] = None
     status: str
     returned_identifier: Optional[str] = None
     response_details: Optional[str] = None
+    error_info: Optional[str] = None
     is_simulated: bool
     timestamp: datetime
 
-    class Config:
-        from_attributes = True
-
 class AuditEventOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     application_id: str
+    document_id: Optional[str] = None
+    finding_id: Optional[int] = None
+    correlation_id: Optional[str] = None
     timestamp: datetime
     actor: str
     action: str
@@ -96,11 +108,12 @@ class AuditEventOut(BaseModel):
     evidence_ref: Optional[str] = None
     source_mode: str
     details: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+    prev_hash: Optional[str] = None
+    hash: Optional[str] = None
 
 class ApplicationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     institution_name: str
     institution_code: Optional[str] = None
@@ -117,9 +130,6 @@ class ApplicationOut(BaseModel):
     findings: List[FindingOut] = []
     audit_events: List[AuditEventOut] = []
 
-    class Config:
-        from_attributes = True
-
 class FindingActionRequest(BaseModel):
     note: Optional[str] = ""
 
@@ -127,6 +137,8 @@ class DecisionRequest(BaseModel):
     note: Optional[str] = ""
 
 class ValidationRuleOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     code: str
     category: str
@@ -137,9 +149,6 @@ class ValidationRuleOut(BaseModel):
     is_active: bool
     version: str
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 class RuleToggleRequest(BaseModel):
     is_active: bool
@@ -153,6 +162,8 @@ class RuleCreateRequest(BaseModel):
     severity: str = "Medium"
 
 class VerificationSourceOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     name: str
     source_type: str
@@ -162,9 +173,6 @@ class VerificationSourceOut(BaseModel):
     last_checked_at: datetime
     details: Optional[str] = None
     methods: List[str] = []
-
-    class Config:
-        from_attributes = True
 
 class AlertOut(BaseModel):
     id: str

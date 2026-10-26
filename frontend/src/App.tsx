@@ -16,7 +16,7 @@ export const App: React.FC = () => {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-[#f4f7f8] flex">
+      <div className="min-h-screen flex text-[#171827]">
         {/* Persistent Desktop & Collapsible Mobile Sidebar */}
         <Sidebar
           isOpen={sidebarOpen}

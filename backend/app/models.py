@@ -65,6 +65,7 @@ class UploadedDocument(Base):
     is_duplicate = Column(Boolean, default=False)
     duplicate_of_id = Column(String, nullable=True)
     ocr_used = Column(Boolean, default=False)
+    ocr_status = Column(String, default="not_required") # "not_required", "success", "not_configured", "failed"
     page_count = Column(Integer, default=1)
     metadata_json = Column(JSON, default=dict)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -128,11 +129,16 @@ class Finding(Base):
     application_id = Column(String, ForeignKey("applications.id"), nullable=False, index=True)
     document_id = Column(String, ForeignKey("uploaded_documents.id"), nullable=True, index=True)
     finding_number = Column(Integer, default=1)
+    rule_id = Column(String, nullable=True)
+    category = Column(String, default="Regulatory Compliance") # "Regulatory Compliance", "Institutional Consistency", "Document Forensics", "Authority Verification"
     title = Column(String, nullable=False)
     status = Column(String, default="Manual review required") # "Manual review required", "Expired", "Mismatch detected", "Source unavailable"
     severity = Column(String, default="High") # "High", "Medium", "Low"
     why_flagged = Column(Text, nullable=False)
+    expected_value = Column(String, nullable=True)
+    actual_value = Column(String, nullable=True)
     evidence_text = Column(Text, nullable=True)
+    page_number = Column(Integer, default=1)
     rule_name = Column(String, nullable=False)
     suggested_next_step = Column(Text, nullable=True)
     ai_generated = Column(Boolean, default=True)
@@ -166,10 +172,14 @@ class VerificationAttempt(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     application_id = Column(String, nullable=False, index=True)
+    document_id = Column(String, nullable=True, index=True)
     source_name = Column(String, nullable=False)
-    status = Column(String, nullable=False) # "Verified", "Mismatch detected", "Source unavailable", "Manual review required"
+    verification_method = Column(String, default="Simulated Adapter")
+    reference_checked = Column(String, nullable=True)
+    status = Column(String, nullable=False) # "Verified", "Mismatch detected", "Source unavailable", "Manual review required", "Not configured"
     returned_identifier = Column(String, nullable=True)
     response_details = Column(Text, nullable=True)
+    error_info = Column(Text, nullable=True)
     is_simulated = Column(Boolean, default=True)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
@@ -179,6 +189,9 @@ class AuditEvent(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     application_id = Column(String, ForeignKey("applications.id"), nullable=False, index=True)
+    document_id = Column(String, nullable=True, index=True)
+    finding_id = Column(Integer, nullable=True)
+    correlation_id = Column(String, nullable=True, index=True)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
     actor = Column(String, default="System") # "S. Officer", "AI Scrutiny Pipeline", "Rules Engine"
     action = Column(String, nullable=False)
@@ -186,6 +199,8 @@ class AuditEvent(Base):
     evidence_ref = Column(String, nullable=True)
     source_mode = Column(String, default="SIMULATED")
     details = Column(Text, nullable=True)
+    prev_hash = Column(String, nullable=True)
+    hash = Column(String, nullable=True)
 
     application = relationship("Application", back_populates="audit_events")
 

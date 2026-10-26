@@ -18,7 +18,7 @@ export const fetchMetrics = async (): Promise<QueueMetrics> => {
   return res.data;
 };
 
-export const fetchApplications = async (params?: { q?: string; filter_status?: string }): Promise<{ items: Application[]; total: number }> => {
+export const fetchApplications = async (params?: { q?: string; filter_status?: string; page?: number; limit?: number }): Promise<{ items: Application[]; total: number }> => {
   const res = await api.get('/applications', { params });
   return res.data;
 };
@@ -28,7 +28,7 @@ export const fetchApplication = async (appId: string): Promise<Application> => {
   return res.data;
 };
 
-export const createApplication = async (data: { institution_name: string; category: string }): Promise<Application> => {
+export const createApplication = async (data: { institution_name: string; category: string; institution_code?: string; id?: string }): Promise<Application> => {
   const res = await api.post('/applications', data);
   return res.data;
 };
@@ -92,8 +92,13 @@ export const fetchAlerts = async (alertType?: string): Promise<AlertItem[]> => {
   return res.data;
 };
 
-export const fetchAuditEvents = async (params?: { application_id?: string; q?: string }): Promise<AuditEvent[]> => {
+export const fetchAuditEvents = async (params?: { application_id?: string; actor?: string; q?: string }): Promise<AuditEvent[]> => {
   const res = await api.get('/audit', { params });
+  return res.data;
+};
+
+export const verifyAuditIntegrity = async (applicationId?: string): Promise<{ valid: boolean; events_checked: number; message: string }> => {
+  const res = await api.get('/audit/verify', { params: { application_id: applicationId } });
   return res.data;
 };
 

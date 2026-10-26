@@ -219,8 +219,117 @@ def generate_standard_pdf(target_path: Path, title: str, subtitle: str, body_lin
 
 def seed_database(db: Session):
     """Seeds the SQLite database with realistic synthetic applications, master records, rules, and sources."""
-    # Check if already seeded
+    # Check if already seeded to 128
+    if db.query(Application).count() >= 128:
+        return
+
+    # If base already seeded, only top up remainder to 128
     if db.query(Application).first():
+        current_count = db.query(Application).count()
+        verified_needed = 74 - db.query(Application).filter(Application.overall_status == "Verified").count()
+        review_needed = 26 - db.query(Application).filter(Application.overall_status == "Manual review").count()
+        expired_needed = 7 - db.query(Application).filter(Application.overall_status == "Expired document").count()
+        pending_needed = 5 - db.query(Application).filter(Application.overall_status == "Source pending").count()
+        anomaly_needed = 16 - db.query(Application).filter(Application.overall_status == "Anomaly flagged").count()
+
+        colleges = [
+            "Vidarbha Institute of Technology", "Sahyadri College of Engineering", "Marathwada Polytechnic",
+            "Shivaji Memorial Institute", "Chhatrapati Academy of Engineering", "Godavari Institute of Pharmacy",
+            "Tapi Valley Engineering College", "Panchavati Polytechnic", "Sinhgad Valley Academy",
+            "Indrayani Institute of Technology", "Ajanta Engineering College", "Ellora Institute of Architecture",
+            "Chandrabhaga Technical Institute", "Mahalaxmi College of Engineering", "Bhimashankar Polytechnic"
+        ]
+        app_counter = 380
+        def next_sub_dt(i):
+            return datetime.datetime(2026, 10, 25, 9, 0) - datetime.timedelta(hours=i*2)
+
+        idx = 0
+        while verified_needed > 0:
+            c_name = colleges[idx % len(colleges)] + f" (Campus {idx // len(colleges) + 1})"
+            db.add(Application(
+                id=f"EoA-2026-00{app_counter:03d}",
+                institution_name=c_name,
+                institution_code=f"1-{1000000 + app_counter*17}",
+                category="Extension of Approval (EoA)",
+                submission_date=next_sub_dt(idx),
+                overall_status="Verified",
+                checks_passed=12,
+                checks_total=12,
+                created_at=next_sub_dt(idx)
+            ))
+            app_counter -= 1
+            verified_needed -= 1
+            idx += 1
+
+        while review_needed > 0:
+            c_name = colleges[idx % len(colleges)] + f" (Campus {idx // len(colleges) + 1})"
+            db.add(Application(
+                id=f"EoA-2026-00{app_counter:03d}",
+                institution_name=c_name,
+                institution_code=f"1-{1000000 + app_counter*17}",
+                category="Extension of Approval (EoA)",
+                submission_date=next_sub_dt(idx),
+                overall_status="Manual review",
+                checks_passed=9,
+                checks_total=12,
+                created_at=next_sub_dt(idx)
+            ))
+            app_counter -= 1
+            review_needed -= 1
+            idx += 1
+
+        while expired_needed > 0:
+            c_name = colleges[idx % len(colleges)] + f" (Campus {idx // len(colleges) + 1})"
+            db.add(Application(
+                id=f"EoA-2026-00{app_counter:03d}",
+                institution_name=c_name,
+                institution_code=f"1-{1000000 + app_counter*17}",
+                category="Extension of Approval (EoA)",
+                submission_date=next_sub_dt(idx),
+                overall_status="Expired document",
+                checks_passed=8,
+                checks_total=12,
+                created_at=next_sub_dt(idx)
+            ))
+            app_counter -= 1
+            expired_needed -= 1
+            idx += 1
+
+        while pending_needed > 0:
+            c_name = colleges[idx % len(colleges)] + f" (Campus {idx // len(colleges) + 1})"
+            db.add(Application(
+                id=f"EoA-2026-00{app_counter:03d}",
+                institution_name=c_name,
+                institution_code=f"1-{1000000 + app_counter*17}",
+                category="Increase in intake",
+                submission_date=next_sub_dt(idx),
+                overall_status="Source pending",
+                checks_passed=10,
+                checks_total=11,
+                created_at=next_sub_dt(idx)
+            ))
+            app_counter -= 1
+            pending_needed -= 1
+            idx += 1
+
+        while anomaly_needed > 0:
+            c_name = colleges[idx % len(colleges)] + f" (Campus {idx // len(colleges) + 1})"
+            db.add(Application(
+                id=f"EoA-2026-00{app_counter:03d}",
+                institution_name=c_name,
+                institution_code=f"1-{1000000 + app_counter*17}",
+                category="New course",
+                submission_date=next_sub_dt(idx),
+                overall_status="Anomaly flagged",
+                checks_passed=7,
+                checks_total=12,
+                created_at=next_sub_dt(idx)
+            ))
+            app_counter -= 1
+            anomaly_needed -= 1
+            idx += 1
+
+        db.commit()
         return
 
     # 1. Seed Validation Rules
@@ -625,7 +734,7 @@ def seed_database(db: Session):
         q_app = Application(
             id=app_id,
             institution_name=name,
-            institution_code=f"1-{hash(app_id) % 9000000 + 1000000}",
+            institution_code=f"1-{abs(hash(app_id)) % 9000000 + 1000000}",
             category=cat,
             submission_date=sub_dt,
             overall_status=stat,
@@ -634,5 +743,235 @@ def seed_database(db: Session):
             created_at=sub_dt
         )
         db.add(q_app)
+    db.commit()
+
+    # Seed Checklist & Documents for Case A: EoA-2026-00417 (Northfield College of Engineering - All Checks Pass)
+    for idx, item in enumerate([
+        "Application letter", "Affidavit / undertaking", "Accreditation certificate",
+        "Land ownership document", "Fire NOC", "Floor plan", "Infrastructure photographs",
+        "Previous EoA status", "Approved programmes and intake", "Faculty records",
+        "TER payment status", "Compliance and deficiency status"
+    ], 1):
+        db.add(ValidationCheck(
+            application_id="EoA-2026-00417",
+            checklist_item=item,
+            source_type="Uploaded" if idx <= 7 else "AICTE records",
+            status="Passed",
+            details="All statutory criteria verified compliant.",
+            order_index=idx
+        ))
+
+    db.add(UploadedDocument(
+        id="doc-00417-letter",
+        application_id="EoA-2026-00417",
+        filename="Northfield_EoA_Application.pdf",
+        file_path="/uploads/EoA_application_letter.pdf",
+        file_size=1150000,
+        file_size_formatted="1.1 MB",
+        mime_type="application/pdf",
+        sha256_hash="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        detected_type="Application letter",
+        detected_language="English",
+        processing_status="Extracted",
+        page_count=2
+    ))
+
+    # Seed Case E: EoA-2026-00409 (Lakeshore Polytechnic - Duplicate Document finding)
+    dup_hash = "d5a8e923b7a145890e0e84b802e3b1c6d9a489112233445566778899aabbccdd"
+    doc_photo1 = UploadedDocument(
+        id="doc-00409-photo1",
+        application_id="EoA-2026-00409",
+        filename="Computer_Center_Lab1.png",
+        file_path="/uploads/Lab_block_floorplan.png",
+        file_size=3145728,
+        file_size_formatted="3.0 MB",
+        mime_type="image/png",
+        sha256_hash=dup_hash,
+        detected_type="Infrastructure photographs",
+        detected_language="Image",
+        processing_status="Extracted",
+        page_count=1
+    )
+    doc_photo2 = UploadedDocument(
+        id="doc-00409-photo2",
+        application_id="EoA-2026-00409",
+        filename="Hardware_Lab_BlockB.png",
+        file_path="/uploads/Lab_block_floorplan.png",
+        file_size=3145728,
+        file_size_formatted="3.0 MB",
+        mime_type="image/png",
+        sha256_hash=dup_hash,
+        detected_type="Infrastructure photographs",
+        detected_language="Image",
+        processing_status="Extracted",
+        is_duplicate=True,
+        duplicate_of_id="doc-00409-photo1",
+        page_count=1
+    )
+    db.add(doc_photo1)
+    db.add(doc_photo2)
+
+    db.add(Finding(
+        application_id="EoA-2026-00409",
+        document_id="doc-00409-photo2",
+        finding_number=1,
+        rule_id="RULE_DUPLICATE_DETECTION",
+        category="Document Forensics",
+        title="Duplicate document uploaded",
+        status="Manual review required",
+        severity="Medium",
+        why_flagged="Two photographs submitted under different laboratory heads share an identical cryptographic SHA-256 hash.",
+        expected_value="Unique photographic evidence for each distinct laboratory facility",
+        actual_value=f"Identical hash: {dup_hash[:16]}...",
+        evidence_text=f"File 1: Computer_Center_Lab1.png\nFile 2: Hardware_Lab_BlockB.png\nSHA-256: {dup_hash}",
+        page_number=1,
+        rule_name="Cryptographic content hash uniqueness check",
+        suggested_next_step="Request geotagged photographs or verify physical campus layout.",
+        ai_generated=False
+    ))
+
+    # Seed Case F: EoA-2026-00412 (Kaveri School of Technology - Source unavailable)
+    db.add(Finding(
+        application_id="EoA-2026-00412",
+        document_id=None,
+        finding_number=1,
+        rule_id="RULE_ISSUING_AUTH_REACHABILITY",
+        category="Authority Verification",
+        title="Issuing authority could not be reached",
+        status="Source unavailable",
+        severity="Low",
+        why_flagged="Automated QR link validation to State Land Records verification endpoint timed out after 3 retries (HTTP 504).",
+        expected_value="HTTP 200 Successful response",
+        actual_value="HTTP 504 Gateway Timeout",
+        evidence_text="Endpoint: https://mahabhulekh.gov.in/api/v2/verify/712\nHTTP Status: 504 Gateway Timeout",
+        page_number=1,
+        rule_name="Issuing authority real-time validation",
+        suggested_next_step="Perform manual verification through revenue office records or retry during off-peak hours.",
+        ai_generated=False
+    ))
 
     db.commit()
+
+    # 7. Generate remaining synthetic applications to reach exactly 128 total:
+    # 74 Verified, 26 Manual review, 7 Expired document, 5 Source pending, 16 Anomaly flagged
+    current_count = db.query(Application).count()
+    if current_count < 128:
+        # Determine remaining quotas needed
+        verified_needed = 74 - db.query(Application).filter(Application.overall_status == "Verified").count()
+        review_needed = 26 - db.query(Application).filter(Application.overall_status == "Manual review").count()
+        expired_needed = 7 - db.query(Application).filter(Application.overall_status == "Expired document").count()
+        pending_needed = 5 - db.query(Application).filter(Application.overall_status == "Source pending").count()
+        anomaly_needed = 16 - db.query(Application).filter(Application.overall_status == "Anomaly flagged").count()
+
+        colleges = [
+            "Vidarbha Institute of Technology", "Sahyadri College of Engineering", "Marathwada Polytechnic",
+            "Shivaji Memorial Institute", "Chhatrapati Academy of Engineering", "Godavari Institute of Pharmacy",
+            "Tapi Valley Engineering College", "Panchavati Polytechnic", "Sinhgad Valley Academy",
+            "Indrayani Institute of Technology", "Ajanta Engineering College", "Ellora Institute of Architecture",
+            "Chandrabhaga Technical Institute", "Mahalaxmi College of Engineering", "Bhimashankar Polytechnic",
+            "Khandesh Institute of Technology", "Raigad Institute of Management", "Sindhudurg Engineering Academy",
+            "Thane Technical Institute", "Kalyan College of Engineering", "Nashik Valley Polytechnic",
+            "Aurangabad Institute of Technology", "Nanded Technical College", "Solapur Academy of Engineering",
+            "Kolhapur Institute of Technology", "Satara College of Pharmacy", "Sangli Engineering Academy",
+            "Ratnagiri Polytechnic", "Nagpur Technical Institute", "Amravati College of Engineering",
+            "Akola Polytechnic Institute", "Yavatmal Institute of Technology", "Wardha Technical Academy",
+            "Bhandara Engineering College", "Gondia Polytechnic", "Chandrapur College of Engineering",
+            "Gadchiroli Technical Institute", "Jalgaon Valley Academy", "Dhule Institute of Technology",
+            "Nandurbar Polytechnic", "Ahmednagar College of Engineering", "Latur Technical Institute",
+            "Osmanabad Academy of Engineering", "Beed Polytechnic Institute", "Parbhani Technical College",
+            "Jalna Engineering Academy", "Hingoli Polytechnic", "Washim Technical Institute",
+            "Buldhana College of Engineering", "Palghar Institute of Technology"
+        ]
+
+        app_counter = 380
+        def next_sub_dt(i):
+            return datetime.datetime(2026, 10, 25, 9, 0) - datetime.timedelta(hours=i*2)
+
+        idx = 0
+        while verified_needed > 0:
+            c_name = colleges[idx % len(colleges)] + f" (Campus {idx // len(colleges) + 1})"
+            db.add(Application(
+                id=f"EoA-2026-00{app_counter:03d}",
+                institution_name=c_name,
+                institution_code=f"1-{1000000 + app_counter*17}",
+                category="Extension of Approval (EoA)",
+                submission_date=next_sub_dt(idx),
+                overall_status="Verified",
+                checks_passed=12,
+                checks_total=12,
+                created_at=next_sub_dt(idx)
+            ))
+            app_counter -= 1
+            verified_needed -= 1
+            idx += 1
+
+        while review_needed > 0:
+            c_name = colleges[idx % len(colleges)] + f" (Campus {idx // len(colleges) + 1})"
+            db.add(Application(
+                id=f"EoA-2026-00{app_counter:03d}",
+                institution_name=c_name,
+                institution_code=f"1-{1000000 + app_counter*17}",
+                category="Extension of Approval (EoA)",
+                submission_date=next_sub_dt(idx),
+                overall_status="Manual review",
+                checks_passed=9,
+                checks_total=12,
+                created_at=next_sub_dt(idx)
+            ))
+            app_counter -= 1
+            review_needed -= 1
+            idx += 1
+
+        while expired_needed > 0:
+            c_name = colleges[idx % len(colleges)] + f" (Campus {idx // len(colleges) + 1})"
+            db.add(Application(
+                id=f"EoA-2026-00{app_counter:03d}",
+                institution_name=c_name,
+                institution_code=f"1-{1000000 + app_counter*17}",
+                category="Extension of Approval (EoA)",
+                submission_date=next_sub_dt(idx),
+                overall_status="Expired document",
+                checks_passed=8,
+                checks_total=12,
+                created_at=next_sub_dt(idx)
+            ))
+            app_counter -= 1
+            expired_needed -= 1
+            idx += 1
+
+        while pending_needed > 0:
+            c_name = colleges[idx % len(colleges)] + f" (Campus {idx // len(colleges) + 1})"
+            db.add(Application(
+                id=f"EoA-2026-00{app_counter:03d}",
+                institution_name=c_name,
+                institution_code=f"1-{1000000 + app_counter*17}",
+                category="Increase in intake",
+                submission_date=next_sub_dt(idx),
+                overall_status="Source pending",
+                checks_passed=10,
+                checks_total=11,
+                created_at=next_sub_dt(idx)
+            ))
+            app_counter -= 1
+            pending_needed -= 1
+            idx += 1
+
+        while anomaly_needed > 0:
+            c_name = colleges[idx % len(colleges)] + f" (Campus {idx // len(colleges) + 1})"
+            db.add(Application(
+                id=f"EoA-2026-00{app_counter:03d}",
+                institution_name=c_name,
+                institution_code=f"1-{1000000 + app_counter*17}",
+                category="New course",
+                submission_date=next_sub_dt(idx),
+                overall_status="Anomaly flagged",
+                checks_passed=7,
+                checks_total=12,
+                created_at=next_sub_dt(idx)
+            ))
+            app_counter -= 1
+            anomaly_needed -= 1
+            idx += 1
+
+        db.commit()
+

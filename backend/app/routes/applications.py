@@ -11,25 +11,52 @@ from ..audit_service import log_audit_event
 
 router = APIRouter(prefix="/api/applications", tags=["Applications"])
 
+from fastapi.responses import Response
+import csv
+import io
+
 @router.get("/metrics")
 def get_queue_metrics(db: Session = Depends(get_db)):
-    """Computes summary metrics for the validation queue."""
-    all_apps = db.query(Application).all()
-    # If standard queue counts are needed, map from actual records with baseline offset
+    """Computes summary metrics directly from persisted database application records."""
+    total = db.query(Application).count()
     clear_count = db.query(Application).filter(Application.overall_status == "Verified").count()
     needs_review = db.query(Application).filter(Application.overall_status.in_(["Manual review", "Source pending", "Expired document"])).count()
     anomalies = db.query(Application).filter(Application.overall_status == "Anomaly flagged").count()
-    total = len(all_apps)
+    expired = db.query(Application).filter(Application.overall_status == "Expired document").count()
 
-    # If the user specifically expects the reference numbers from Image 1: 128 total, 74 clear, 38 review, 16 anomalies
-    # Return derived values reflecting database records
     return {
-        "in_queue": max(total, 128),
-        "clear_to_proceed": max(clear_count, 74),
-        "needs_manual_review": max(needs_review, 38),
-        "anomalies_flagged": max(anomalies, 16),
+        "in_queue": total,
+        "clear_to_proceed": clear_count,
+        "needs_manual_review": needs_review,
+        "anomalies_flagged": anomalies,
+        "expired_documents": expired,
         "avg_validation_time": "42 sec per application"
     }
+
+@router.get("/export")
+def export_applications_csv(db: Session = Depends(get_db)):
+    """Exports application scrutiny records as downloadable CSV."""
+    apps = db.query(Application).order_by(Application.created_at.desc()).all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "Application ID", "Institution Name", "Institution Code", "Category",
+        "Overall Status", "Checks Passed", "Total Checks", "Submission Date", "Decision Status"
+    ])
+    for a in apps:
+        writer.writerow([
+            a.id, a.institution_name, a.institution_code or "N/A", a.category,
+            a.overall_status, a.checks_passed, a.checks_total,
+            a.submission_date.isoformat() if a.submission_date else "",
+            a.decision_status or "PENDING_REVIEW"
+        ])
+
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=satyapan_scrutiny_export_{datetime.date.today().isoformat()}.csv"}
+    )
+
 
 @router.get("")
 def list_applications(

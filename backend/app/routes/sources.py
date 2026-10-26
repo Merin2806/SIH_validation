@@ -11,12 +11,14 @@ router = APIRouter(prefix="/api/sources", tags=["Issuing Authorities"])
 @router.get("", response_model=List[VerificationSourceOut])
 def list_sources(db: Session = Depends(get_db)):
     sources = db.query(VerificationSource).all()
-    if not sources:
-        # Fallback to in-memory registry
+    if not sources or len(sources) < 5:
         return verification_adapters.get_all_sources()
     return sources
 
 @router.post("/{source_id}/test")
-def test_source_connection(source_id: str, identifier: str = Query("FS/NOC/2021/04418")):
+def test_source_connection(
+    source_id: str,
+    identifier: str = Query("FS/NOC/2021/04418")
+):
     result = verification_adapters.query_source(source_id, identifier)
     return result

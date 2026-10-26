@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, AlertTriangle, Clock, X, ArrowRight, Filter, AlertCircle } from 'lucide-react';
+import { Bell, AlertTriangle, Clock, X, ArrowRight, Filter, AlertCircle, ShieldAlert, ChevronRight } from 'lucide-react';
 import { fetchAlerts } from '../api/client';
 import { AlertItem } from '../types';
 
@@ -27,27 +27,60 @@ export const Alerts: React.FC = () => {
   };
 
   const types = [
-    { label: 'All alerts', value: 'all' },
-    { label: 'Suspected anomaly', value: 'suspected_anomaly' },
-    { label: 'Expired document', value: 'expired_document' },
-    { label: 'Source pending', value: 'source_pending' },
-    { label: 'Missing information', value: 'missing_information' },
+    { label: 'All Alerts', value: 'all' },
+    { label: 'Suspected Anomaly', value: 'suspected_anomaly' },
+    { label: 'Expired Document', value: 'expired_document' },
+    { label: 'Source Pending', value: 'source_pending' },
+    { label: 'Missing Information', value: 'missing_information' },
     { label: 'Duplicate', value: 'duplicate' }
   ];
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Title & Active Alerts Badge */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#14323b] tracking-tight">Alerts</h1>
-          <p className="text-xs sm:text-sm text-[#4b6a73] mt-0.5">
-            Real-time attention flags requiring scrutiny officer review.
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#EAF8FF] text-[#0369A1] border border-[#BFE9FF]">
+              Operational Monitoring
+            </span>
+            <span className="text-xs text-[#888A98]">· Real-time Flags</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#171827] tracking-tight">Alerts Centre</h1>
+          <p className="text-xs sm:text-sm text-[#686B7A] mt-1">
+            Active scrutiny attention flags and potential regulatory discrepancies requiring officer review.
           </p>
         </div>
 
-        <span className="px-3 py-1 bg-[#1b353c] text-white rounded-full text-xs font-bold self-start sm:self-auto">
-          {alerts.length} active alerts
+        <span className="px-4 py-2 bg-gradient-to-r from-[#4922C7] to-[#6F3DFF] text-white rounded-xl text-xs font-black self-start sm:self-auto flex items-center gap-2 shadow-md shadow-[#6F3DFF]/25">
+          <Bell className="w-4 h-4 stroke-[2.5]" />
+          <span>{alerts.length} Active Flags</span>
         </span>
+      </div>
+
+      {/* 3 Metric Cards for Alerts */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-gradient-to-br from-[#2D127A] to-[#6F3DFF] text-white p-4.5 rounded-2xl border-2 border-[#865EFF] shadow-md">
+          <span className="text-xs font-bold text-[#BFE9FF]">Total Attention Flags</span>
+          <p className="text-2xl sm:text-3xl font-black mt-1 text-white">{alerts.length}</p>
+          <span className="text-[11px] text-[#E1D6FF]">Require scrutiny officer verification</span>
+        </div>
+
+        <div className="bg-gradient-to-br from-[#FEF2F2] to-[#FEE2E2] text-[#991B1B] p-4.5 rounded-2xl border-2 border-[#FECACA] shadow-xs">
+          <span className="text-xs font-bold text-[#991B1B]">Suspected Anomalies</span>
+          <p className="text-2xl sm:text-3xl font-black mt-1 text-[#DC2626]">
+            {alerts.filter(a => a.alert_type.includes('anomaly') || a.alert_type.includes('Duplicate')).length}
+          </p>
+          <span className="text-[11px] text-[#991B1B]/80 font-medium">Critical parameter mismatches</span>
+        </div>
+
+        <div className="bg-gradient-to-br from-[#FFF1F2] to-[#FFE4E6] text-[#BE123C] p-4.5 rounded-2xl border-2 border-[#FECDD3] shadow-xs">
+          <span className="text-xs font-bold text-[#BE123C]">Expired Certificates</span>
+          <p className="text-2xl sm:text-3xl font-black mt-1 text-[#E11D48]">
+            {alerts.filter(a => a.alert_type.includes('Expired')).length}
+          </p>
+          <span className="text-[11px] text-[#BE123C]/80 font-medium">Validity past statutory cut-off</span>
+        </div>
       </div>
 
       {/* Filter Tabs */}
@@ -56,10 +89,10 @@ export const Alerts: React.FC = () => {
           <button
             key={t.value}
             onClick={() => setFilterType(t.value)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all min-h-[38px] ${
               filterType === t.value
-                ? 'bg-[#255e69] text-white shadow-sm'
-                : 'bg-white text-[#395e67] border border-[#d6e3e7] hover:bg-gray-50'
+                ? 'bg-gradient-to-r from-[#4922C7] to-[#6F3DFF] text-white shadow-md shadow-[#6F3DFF]/30'
+                : 'bg-white text-[#484A54] border-2 border-[#CBD5E1] hover:border-[#6F3DFF] hover:bg-[#BFE9FF]/30'
             }`}
           >
             {t.label}
@@ -73,52 +106,65 @@ export const Alerts: React.FC = () => {
           <div
             key={alert.id}
             onClick={() => navigate(`/reviewer/${alert.application_id}`)}
-            className="bg-white p-4 sm:p-5 rounded-xl border border-[#e1eaed] hover:border-[#b4d1d9] shadow-sm hover:shadow cursor-pointer transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
+            className={`p-4 sm:p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 group shadow-sm hover:shadow-md ${
+              alert.alert_type.includes('anomaly') || alert.alert_type.includes('Duplicate')
+                ? 'bg-gradient-to-r from-[#FEF2F2] to-white border-[#FECACA] hover:border-[#DC2626]'
+                : alert.alert_type.includes('Expired')
+                ? 'bg-gradient-to-r from-[#FFF1F2] to-white border-[#FECDD3] hover:border-[#E11D48]'
+                : alert.alert_type.includes('Source')
+                ? 'bg-gradient-to-r from-[#FFFBEB] to-white border-[#FDE68A] hover:border-[#D97706]'
+                : 'bg-gradient-to-r from-[#EAF8FF] to-white border-[#BFE9FF] hover:border-[#6F3DFF]'
+            }`}
           >
-            <div className="space-y-1.5 flex-1">
+            <div className="space-y-2 flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                <span className={`px-2.5 py-1 rounded-full text-[11px] font-black ${
                   alert.alert_type.includes('anomaly') || alert.alert_type.includes('Duplicate')
-                    ? 'bg-red-50 text-red-700 border border-red-200'
+                    ? 'bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]'
                     : alert.alert_type.includes('Expired')
-                    ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                    ? 'bg-[#FFF1F2] text-[#BE123C] border border-[#FECDD3]'
                     : alert.alert_type.includes('Source')
-                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                    : 'bg-blue-50 text-blue-700 border border-blue-200'
+                    ? 'bg-[#FFFBEB] text-[#92400E] border border-[#FDE68A]'
+                    : 'bg-[#EAF8FF] text-[#0369A1] border border-[#BAE6FD]'
                 }`}>
                   {alert.alert_type}
                 </span>
 
-                <span className="text-xs font-semibold text-[#185361] underline">
+                <span className="text-xs font-black text-[#6F3DFF] group-hover:text-[#4922C7] transition-colors underline decoration-[#6F3DFF] underline-offset-2">
                   {alert.application_id}
                 </span>
 
-                <span className="text-xs text-gray-500">·</span>
+                <span className="text-xs text-[#CBD5E1]">·</span>
 
-                <span className="text-xs font-bold text-gray-700">
+                <span className="text-xs font-bold text-[#171827] bg-white px-2 py-0.5 rounded-md border border-[#CBD5E1]">
                   {alert.doc_type}
                 </span>
 
-                <span className="text-xs text-gray-400">·</span>
+                <span className="text-xs text-[#CBD5E1]">·</span>
 
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-[#475569] truncate max-w-xs font-semibold">
                   {alert.institution_name}
                 </span>
               </div>
 
-              <p className="text-xs text-[#203a40] font-medium leading-relaxed">
+              <p className="text-xs sm:text-[13px] text-[#334155] font-medium leading-relaxed">
                 {alert.message}
               </p>
             </div>
 
-            <div className="flex items-center gap-3 sm:self-center">
-              <span className="text-xs text-gray-400">{alert.time_ago}</span>
-              <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-[#255e69] group-hover:text-white transition-colors text-gray-600">
-                <ArrowRight className="w-4 h-4" />
+            <div className="flex items-center gap-3 sm:self-center flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#F1F5F9]">
+              <span className="text-xs font-bold text-[#686B7A]">{alert.time_ago}</span>
+              <div className="w-8 h-8 rounded-xl bg-white border-2 border-[#CBD5E1] group-hover:bg-[#6F3DFF] group-hover:text-white group-hover:border-[#6F3DFF] transition-all flex items-center justify-center text-[#686B7A] shadow-xs">
+                <ChevronRight className="w-4 h-4 stroke-[2.5]" />
               </div>
             </div>
           </div>
         ))}
+        {alerts.length === 0 && (
+          <div className="bg-white p-12 rounded-2xl border-2 border-[#CBD5E1] text-center text-[#686B7A]">
+            <p className="text-sm font-bold">No alerts found matching the selected filter.</p>
+          </div>
+        )}
       </div>
     </div>
   );

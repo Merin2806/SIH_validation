@@ -2,28 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-glacier-blue: #BFE9FF;
+  --color-glacier-light: #EAF8FF;
+  --color-ultraviolet: #6F3DFF;
+  --color-ultraviolet-light: #F0EBFF;
+  --color-ultraviolet-dark: #4922C7;
+  --color-mineral-grey: #B7B7B7;
+  --color-border: #E3E5EC;
+  --color-background: #F7F8FC;
+  --color-surface: #FFFFFF;
+  --color-text-primary: #171827;
+  --color-text-secondary: #686B7A;
+}
+
 @layer base {
+  * {
+    border-color: #CBD5E1;
+  }
   body {
-    background-color: #f4f7f8;
-    color: #172b31;
+    background-color: #EEF2F6;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(191, 233, 255, 0.45) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(111, 61, 255, 0.14) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, rgba(191, 233, 255, 0.3) 0px, transparent 60%);
+    background-attachment: fixed;
+    color: #171827;
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    overflow-x: hidden;
   }
 }
 
-/* Custom scrollbar */
+/* Custom modern scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f7;
+  background: #F2F3F5;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd7dc;
+  background: #CDD0D8;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ab0b9;
+  background: #9A9CA6;
 }
 
 /* Document highlighting pulse and custom styles */
@@ -34,8 +60,23 @@
 @keyframes pulse-border {
   0%, 100% {
     opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 0.6;
+    opacity: 0.65;
+    transform: scale(1.02);
   }
+}
+
+/* Glassmorphism and subtle panel effects */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Interactive focus indicators */
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid #6F3DFF;
+  outline-offset: 2px;
 }

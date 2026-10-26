@@ -29,6 +29,8 @@ export interface UploadedDocument {
   detected_language: string;
   processing_status: string;
   is_duplicate: boolean;
+  ocr_used?: boolean;
+  ocr_status?: string;
   page_count: number;
   extracted_fields?: ExtractedField[];
   findings?: Finding[];
@@ -49,11 +51,16 @@ export interface ExtractedField {
 export interface Finding {
   id: number;
   finding_number: number;
+  rule_id?: string;
+  category?: string;
   title: string;
   status: string;
   severity: string;
   why_flagged: string;
+  expected_value?: string;
+  actual_value?: string;
   evidence_text?: string;
+  page_number?: number;
   rule_name: string;
   suggested_next_step?: string;
   ai_generated: boolean;
@@ -89,6 +96,9 @@ export interface VerificationSource {
 export interface AuditEvent {
   id: number;
   application_id: string;
+  document_id?: string;
+  finding_id?: number;
+  correlation_id?: string;
   timestamp: string;
   actor: string;
   action: string;
@@ -96,6 +106,8 @@ export interface AuditEvent {
   evidence_ref?: string;
   source_mode: string;
   details?: string;
+  prev_hash?: string;
+  hash?: string;
 }
 
 export interface ValidationRule {
@@ -116,6 +128,7 @@ export interface QueueMetrics {
   clear_to_proceed: number;
   needs_manual_review: number;
   anomalies_flagged: number;
+  expired_documents?: number;
   avg_validation_time: string;
 }
 
